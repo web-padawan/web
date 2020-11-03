@@ -89,6 +89,25 @@ export function visualRegressionPlugin(
             const screenshot = await element.screenshot();
             return visualDiffCommand(mergedOptions, screenshot, session.browser.name, payload.name);
           }
+          
+          if (session.browser.type === 'selenium') {
+            const driver = session.browser.driver;
+
+            const handle = await driver.findElement(function findElement(elementId) {
+              return (
+                (window as any).__WTR_VISUAL_REGRESSION__ &&
+                (window as any).__WTR_VISUAL_REGRESSION__[elementId]
+              );
+            }, payload.id);
+            if (!element) {
+              throw new VisualRegressionError(
+                'Something went wrong diffing element, the browser could not find it.',
+              );
+            }
+
+            const screenshot = await element.takeScreenshot();
+            return visualDiffCommand(mergedOptions, screenshot, session.browser.name, payload.name);
+          }          
 
           throw new Error(
             `Browser type ${session.browser.type} is not supported for visual diffing.`,
